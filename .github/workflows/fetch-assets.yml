@@ -11,6 +11,10 @@ on:
         default: fetch
         type: choice
         options: [list, fetch]
+      manifest:
+        description: "файл манифеста в tools/"
+        required: false
+        default: assets_manifest.json
 
 permissions:
   contents: write
@@ -24,6 +28,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Fetch
+        env:
+          MANIFEST: ${{ inputs.manifest }}
+          SOURCES_MD: ASSET_SOURCES_${{ inputs.manifest }}.md
         run: python3 tools/fetch_assets.py "${{ inputs.mode }}"
       - name: Commit
         run: |

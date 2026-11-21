@@ -1,0 +1,17 @@
+{
+ "texture_res": "1k",
+ "model_res": "1k",
+ "polyhaven_textures": [],
+ "polyhaven_models": [],
+ "kenney_kits": [
+  "survival-kit",
+  "car-kit",
+  "nature-kit",
+  "rpg-audio",
+  "impact-sounds",
+  "interface-sounds",
+  "animated-characters-1",
+  "animated-characters-2",
+  "animated-characters-3"
+ ]
+}

@@ -89,24 +89,31 @@ def ph_model(aid, res, log):
 
 def kenney_kit(slug, log):
     page = get(f"https://kenney.nl/assets/{slug}")
-    m = re.findall(r"https://kenney\.nl/media/pages/assets/[^\"'\s]+?\.zip", page)
+    m = re.findall(r"(?:https://(?:www\.)?kenney\.nl)?/media/[^\"'\s>]+?\.zip", page)
     if not m:
         print(f"!! no zip link for kenney {slug}")
+        for h in re.findall(r"href=[\"']([^\"']+)[\"']", page):
+            if "download" in h.lower() or "zip" in h.lower() or "media" in h.lower():
+                print("   href:", h)
         return
-    data = get(m[0], True)
+    url = m[0] if m[0].startswith("http") else "https://kenney.nl" + m[0]
+    data = get(url, True)
     z = zipfile.ZipFile(io.BytesIO(data))
+    print(f"kenney {slug}: {len(z.namelist())} entries; sample:", [n for n in z.namelist() if not n.endswith('/')][:12])
     base = os.path.join(OUT, "kenney", slug)
     n = 0
     for name in z.namelist():
         low = name.lower()
         if name.endswith("/"):
             continue
-        is_glb = "glb format/" in low
+        is_glb = "glb format/" in low or (slug.startswith("animated-characters") and (low.endswith(".fbx") or low.endswith(".png")))
         is_audio = low.endswith(".ogg") and "audio/" in low
         keep = is_glb or is_audio or low.endswith("license.txt")
         if keep:
-            if is_glb:
+            if is_glb and "GLB format/" in name:
                 rel = name.split("GLB format/")[-1]
+            elif is_glb:
+                rel = name.split("/", 1)[-1] if "/" in name else name
             elif is_audio:
                 rel = "audio/" + os.path.basename(name)
             else:
@@ -117,7 +124,7 @@ def kenney_kit(slug, log):
 
 
 def cmd_fetch():
-    with open(os.path.join(ROOT, "tools", "assets_manifest.json"), encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "tools", os.environ.get("MANIFEST", "assets_manifest.json")), encoding="utf-8") as f:
         man = json.load(f)
     log = ["| Источник | Ассет | Лицензия | Ссылка |", "|---|---|---|---|"]
     errors = []
@@ -136,7 +143,7 @@ def cmd_fetch():
             kenney_kit(slug, log)
         except Exception as e:  # noqa
             errors.append(f"kenney {slug}: {e}")
-    with open(os.path.join(ROOT, "docs", "ASSET_SOURCES.generated.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "docs", os.environ.get("SOURCES_MD", "ASSET_SOURCES.generated.md")), "w", encoding="utf-8") as f:
         f.write("# Загруженные сторонние ассеты (автоматически)\n\n")
         f.write("Все файлы ниже получены скриптом `tools/fetch_assets.py` из официальных источников.\n\n")
         f.write("\n".join(log) + "\n")
