@@ -98,9 +98,18 @@ def kenney_kit(slug, log):
     n = 0
     for name in z.namelist():
         low = name.lower()
-        keep = ("glb format/" in low and not name.endswith("/")) or low.endswith("license.txt")
+        if name.endswith("/"):
+            continue
+        is_glb = "glb format/" in low
+        is_audio = low.endswith(".ogg") and "audio/" in low
+        keep = is_glb or is_audio or low.endswith("license.txt")
         if keep:
-            rel = name.split("GLB format/")[-1] if "GLB format/" in name else os.path.basename(name)
+            if is_glb:
+                rel = name.split("GLB format/")[-1]
+            elif is_audio:
+                rel = "audio/" + os.path.basename(name)
+            else:
+                rel = os.path.basename(name)
             save(os.path.join(base, rel), z.read(name))
             n += 1
     log.append(f"| Kenney | `{slug}` ({n} files) | CC0 | https://kenney.nl/assets/{slug} |")

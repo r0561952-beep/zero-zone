@@ -29,7 +29,7 @@ jobs:
         run: |
           git config user.name "zero-zone-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A tools assets docs
+          git add -A .
           if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
           git commit -m "assets: ${{ inputs.mode }} CC0 assets [skip ci]"
           git push
