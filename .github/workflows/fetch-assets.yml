@@ -1,0 +1,35 @@
+# Загрузка CC0-ассетов (Poly Haven, Kenney) и коммит их в репозиторий.
+# Запуск: Actions → "Fetch CC0 assets" → Run workflow.
+name: Fetch CC0 assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "list = каталог Poly Haven, fetch = скачать по tools/assets_manifest.json"
+        required: true
+        default: fetch
+        type: choice
+        options: [list, fetch]
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch
+        run: python3 tools/fetch_assets.py "${{ inputs.mode }}"
+      - name: Commit
+        run: |
+          git config user.name "zero-zone-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A tools assets docs
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "assets: ${{ inputs.mode }} CC0 assets [skip ci]"
+          git push
