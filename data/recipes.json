@@ -1,0 +1,22 @@
+{
+  "_comment": "station: hand | workbench | fire. tools — нужны, но не расходуются. known — доступен с начала игры.",
+  "rag_bandage":    {"out": ["rag_bandage", 1], "in": {"cloth": 2}, "station": "hand", "time": 2, "known": true},
+  "torch":          {"out": ["torch", 1], "in": {"sticks": 2, "cloth": 1}, "station": "hand", "time": 3, "known": true},
+  "campfire_kit":   {"out": ["campfire_kit", 1], "in": {"wood_log": 2, "sticks": 2}, "station": "hand", "time": 3, "known": true},
+  "plank":          {"out": ["plank", 2], "in": {"wood_log": 1}, "tools": ["saw"], "station": "hand", "time": 4, "known": true},
+  "sticks":         {"out": ["sticks", 3], "in": {"wood_log": 1}, "tools": ["axe"], "station": "hand", "time": 2, "known": true},
+  "scrap_from_tins":{"out": ["scrap_metal", 1], "in": {"empty_tin": 3}, "tools": ["hammer"], "station": "hand", "time": 2, "known": true},
+  "water_clean":    {"out": ["water_clean", 1], "in": {"water_dirty": 1}, "station": "fire", "time": 5, "known": true},
+  "baked_potato":   {"out": ["baked_potato", 1], "in": {"potato": 1}, "station": "fire", "time": 4, "known": true},
+  "mushrooms_fried":{"out": ["mushrooms_fried", 1], "in": {"mushrooms_raw": 2}, "station": "fire", "time": 4, "known": true},
+  "earplugs":       {"out": ["earplugs", 2], "in": {"candle": 1, "cloth": 1}, "station": "hand", "time": 3, "known": false},
+  "tea":            {"out": ["tea", 1], "in": {"water_clean": 1, "honey": 1}, "station": "fire", "time": 3, "known": false},
+  "spear":          {"out": ["spear", 1], "in": {"plank": 1, "duct_tape": 1}, "tools": ["knife"], "station": "hand", "time": 5, "known": false},
+  "storage_crate":  {"out": ["storage_crate", 1], "in": {"plank": 4, "nails": 2}, "tools": ["hammer"], "station": "hand", "time": 8, "known": false},
+  "bedroll":        {"out": ["bedroll", 1], "in": {"cloth": 5, "rope": 1}, "station": "hand", "time": 8, "known": false},
+  "workbench":      {"out": ["workbench", 1], "in": {"plank": 6, "nails": 3}, "tools": ["hammer", "saw"], "station": "hand", "time": 12, "known": false},
+  "rain_collector": {"out": ["rain_collector", 1], "in": {"scrap_metal": 4, "plank": 2, "nails": 2}, "tools": ["hammer"], "station": "workbench", "time": 10, "known": false},
+  "barricade":      {"out": ["barricade", 1], "in": {"plank": 3, "nails": 3}, "tools": ["hammer"], "station": "workbench", "time": 8, "known": false},
+  "crate_big":      {"out": ["storage_crate", 2], "in": {"plank": 7, "nails": 4, "scrap_metal": 1}, "tools": ["hammer", "saw"], "station": "workbench", "time": 12, "known": false},
+  "jacket_patch":   {"out": ["jacket_warm", 1], "in": {"jacket_basic": 1, "cloth": 6, "rope": 1}, "station": "workbench", "time": 15, "known": false}
+}

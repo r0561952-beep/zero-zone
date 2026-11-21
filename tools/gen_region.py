@@ -151,7 +151,8 @@ def main():
     for fz in reg["flat_zones"]:
         cx, cz = fz["center"]
         dd = np.sqrt((PX - cx) ** 2 + (PZ - cz) ** 2) + edge_noise * min(1.0, fz["radius"] / 100.0)
-        forest *= smooth01((dd - fz["radius"] * 0.85) / (fz["blend"] * 0.8))
+        clear_r = fz.get("clear", fz["radius"] * 0.85)
+        forest *= smooth01((dd - clear_r) / (fz["blend"] * 0.8))
     for oa in reg["open_areas"]:
         cx, cz = oa["center"]
         rx, rz = oa["radius"]

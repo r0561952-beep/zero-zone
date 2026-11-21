@@ -1,0 +1,147 @@
+# Сборка ZERO ZONE: импорт → автотесты → экспорт Android APK + Linux + Windows → GitHub Release.
+# APK для телефона: вкладка Releases репозитория → последний релиз → ZeroZone-*.apk
+name: Build APK & PC
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: "4.7.2"
+  GODOT_RELEASE: "4.7.2-stable"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_RELEASE }}-v1
+
+      - name: Download Godot + export templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          cd ~/godot
+          wget -q https://github.com/godotengine/godot-builds/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_RELEASE}_linux.x86_64.zip
+          mv Godot_v${GODOT_RELEASE}_linux.x86_64 godot
+          rm Godot_v${GODOT_RELEASE}_linux.x86_64.zip
+          wget -q https://github.com/godotengine/godot-builds/releases/download/${GODOT_RELEASE}/Godot_v${GODOT_RELEASE}_export_templates.tpz
+          unzip -q Godot_v${GODOT_RELEASE}_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+          rm -rf templates Godot_v${GODOT_RELEASE}_export_templates.tpz
+
+      - name: Restore signing key
+        id: cache-key
+        uses: actions/cache@v4
+        with:
+          path: ~/zerozone-keystore
+          key: android-signing-keystore-v1
+
+      - name: Android SDK & keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          echo "ANDROID_HOME=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> $GITHUB_ENV
+          # Приоритет: секрет репозитория → ключ из кэша Actions → новый ключ (сохранится в кэш).
+          # Один и тот же ключ нужен, чтобы новые APK ставились поверх старых без удаления игры.
+          mkdir -p $HOME/zerozone-keystore
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > $HOME/zerozone.keystore
+            PASS="$KEYSTORE_PASS"
+          elif [ -f $HOME/zerozone-keystore/zerozone.keystore ]; then
+            cp $HOME/zerozone-keystore/zerozone.keystore $HOME/zerozone.keystore
+            PASS=zerozone
+          else
+            PASS=zerozone
+            keytool -genkeypair -keystore $HOME/zerozone-keystore/zerozone.keystore -storepass $PASS -keypass $PASS -alias zerozone \
+              -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Zero Zone, O=Zero Zone, C=RU"
+            cp $HOME/zerozone-keystore/zerozone.keystore $HOME/zerozone.keystore
+          fi
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$HOME/zerozone.keystore" >> $GITHUB_ENV
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=zerozone" >> $GITHUB_ENV
+          echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$PASS" >> $GITHUB_ENV
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$HOME/zerozone.keystore" >> $GITHUB_ENV
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=zerozone" >> $GITHUB_ENV
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=$PASS" >> $GITHUB_ENV
+
+      - name: Version
+        run: |
+          VER=$(grep -oP 'config/version="\K[^"]+' project.godot)
+          echo "APP_VERSION=$VER" >> $GITHUB_ENV
+          echo "BUILD_TAG=v$VER-build.${{ github.run_number }}" >> $GITHUB_ENV
+          sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" export_presets.cfg
+          sed -i "s/^version\/name=.*/version\/name=\"$VER.${{ github.run_number }}\"/" export_presets.cfg
+
+      - name: Import project
+        run: |
+          timeout 900 ~/godot/godot --headless --import --path . || true
+          timeout 600 ~/godot/godot --headless --import --path . 2>&1 | tee import.log || true
+          if grep -q "SCRIPT ERROR" import.log; then grep -A1 "SCRIPT ERROR" import.log; exit 1; fi
+
+      - name: Tests
+        run: |
+          timeout 600 ~/godot/godot --headless --path . --quit-after 30000 res://tests/test_runner.tscn 2>&1 | tee test.log
+          grep -q "RESULT: .* 0 failed" test.log
+
+      - name: Export Android APK
+        run: |
+          mkdir -p build/android build/linux build/windows
+          timeout 900 ~/godot/godot --headless --path . --export-release "Android" build/android/ZeroZone.apk 2>&1 | tee export_android.log
+          test -f build/android/ZeroZone.apk
+          ls -la build/android
+
+      - name: Export PC (Linux, Windows)
+        run: |
+          timeout 900 ~/godot/godot --headless --path . --export-release "Linux" build/linux/ZeroZone.x86_64 2>&1 | tail -5
+          timeout 900 ~/godot/godot --headless --path . --export-release "Windows" build/windows/ZeroZone.exe 2>&1 | tail -5
+          cd build && zip -qr ZeroZone-linux.zip linux && zip -qr ZeroZone-windows.zip windows && ls -la
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeroZone-${{ env.BUILD_TAG }}
+          path: |
+            build/android/ZeroZone.apk
+            build/ZeroZone-linux.zip
+            build/ZeroZone-windows.zip
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/android/ZeroZone.apk "build/ZeroZone-${BUILD_TAG}.apk"
+          cat > notes.md <<EOF
+          **ZERO ZONE ${BUILD_TAG}** — автоматическая сборка из коммита ${GITHUB_SHA::7}.
+
+          📱 **Android:** скачайте \`ZeroZone-${BUILD_TAG}.apk\`, откройте на телефоне и разрешите установку из этого источника.
+          Требуется Android 7+ (arm64), рекомендуется GPU с Vulkan (есть автоматический откат на OpenGL ES 3).
+
+          💻 **PC:** \`ZeroZone-windows.zip\` / \`ZeroZone-linux.zip\` — распакуйте и запустите. В настройках выберите режим управления «PC».
+          EOF
+          gh release create "$BUILD_TAG" "build/ZeroZone-${BUILD_TAG}.apk" build/ZeroZone-linux.zip build/ZeroZone-windows.zip \
+            --title "ZERO ZONE $BUILD_TAG" --notes-file notes.md --latest
