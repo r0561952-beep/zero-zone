@@ -87,16 +87,35 @@ def ph_model(aid, res, log):
     log.append(f"| Poly Haven | model `{aid}` ({res}) | CC0 | https://polyhaven.com/a/{aid} |")
 
 
-def kenney_kit(slug, log):
+def find_zip(slug):
+    """Kenney.nl прячет ссылку за JS-окном; ищем на kenney.nl, затем на OpenGameArt (зеркало автора)."""
     page = get(f"https://kenney.nl/assets/{slug}")
-    m = re.findall(r"(?:https://(?:www\.)?kenney\.nl)?/media/[^\"'\s>]+?\.zip", page)
-    if not m:
+    i = page.find('id="inline-download"')
+    if i < 0:
+        i = page.find("inline-download\"")
+    if i >= 0:
+        print("   kenney modal:", re.sub(r"\s+", " ", page[i:i + 1500]))
+    for url in re.findall(r"(?:https://(?:www\.)?kenney\.nl)?/[^\"'\s>]+?\.zip", page):
+        return url if url.startswith("http") else "https://kenney.nl" + url
+    for oga in (slug, slug.replace("-kit", "-kit-0")):
+        try:
+            p = get(f"https://opengameart.org/content/{oga}")
+        except Exception as e:  # noqa
+            print("   oga fail", oga, e)
+            continue
+        zips = re.findall(r"https://opengameart\.org/sites/default/files/[^\"'\s>]+?\.zip", p)
+        print("   oga", oga, zips[:5])
+        if zips:
+            return zips[-1]
+    return None
+
+
+def kenney_kit(slug, log):
+    url = find_zip(slug)
+    if not url:
         print(f"!! no zip link for kenney {slug}")
-        for h in re.findall(r"href=[\"']([^\"']+)[\"']", page):
-            if "download" in h.lower() or "zip" in h.lower() or "media" in h.lower():
-                print("   href:", h)
         return
-    url = m[0] if m[0].startswith("http") else "https://kenney.nl" + m[0]
+    print("   zip:", url)
     data = get(url, True)
     z = zipfile.ZipFile(io.BytesIO(data))
     print(f"kenney {slug}: {len(z.namelist())} entries; sample:", [n for n in z.namelist() if not n.endswith('/')][:12])
