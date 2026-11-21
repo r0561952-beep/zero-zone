@@ -58,8 +58,9 @@ def cmd_list():
 def ph_texture(aid, res, log):
     files = json.loads(get(f"https://api.polyhaven.com/files/{aid}"))
     # Карта: наш суффикс -> ключ Poly Haven
-    wanted = {"albedo": ["Diffuse", "diff"], "normal": ["nor_gl"], "arm": ["arm"],
-              "rough": ["Rough", "rough"], "ao": ["AO", "ao"]}
+    wanted = {"albedo": ["Diffuse", "diff"], "normal": ["nor_gl"], "arm": ["arm"]}
+    if "arm" not in files:
+        wanted["rough"] = ["Rough", "rough"]
     got = []
     for suffix, keys in wanted.items():
         for k in keys:
