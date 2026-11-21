@@ -25,6 +25,7 @@ func _ready() -> void:
 	test_crafting()
 	await test_world_and_save()
 	await test_ui_and_gameplay()
+	await test_app_flow()
 	print("=== RESULT: %d passed, %d failed ===" % [passed, failed])
 	for f in _fails:
 		print("FAILED: ", f)
@@ -389,4 +390,30 @@ func test_ui_and_gameplay() -> void:
 	GameState.running = false
 	ui.queue_free()
 	world.queue_free()
+	await get_tree().process_frame
+
+
+func test_app_flow() -> void:
+	print("[app flow]")
+	var main: Node = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	for i in 3:
+		await get_tree().process_frame
+	ok(main.menu != null, "главное меню показывается")
+	main.start_game(true)
+	for i in 12:
+		await get_tree().process_frame
+	ok(main.world != null and GameState.player != null and GameState.running, "новая игра из меню запускается")
+	ok(SaveSystem.save_game("4"), "сохранение из игры")
+	main.ui.to_main_menu.emit()
+	for i in 4:
+		await get_tree().process_frame
+	ok(main.world == null and main.menu != null and GameState.player == null, "выход в главное меню освобождает мир")
+	main.load_game("4")
+	for i in 12:
+		await get_tree().process_frame
+	ok(main.world != null and GameState.player != null, "загрузка сохранения из меню")
+	main.end_game()
+	SaveSystem.delete_slot("4")
+	main.queue_free()
 	await get_tree().process_frame

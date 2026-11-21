@@ -218,6 +218,13 @@ func _physics_process(delta: float) -> void:
 			survival.stamina -= 10.0
 			emit_noise(6.0)
 	move_and_slide()
+	# страховка: если игрок как-то провалился под мир — вернуть на поверхность
+	if global_position.y < -60.0:
+		var gx := global_position.x
+		var gz := global_position.z
+		global_position = Vector3(gx, RegionData.height_at(gx, gz) + 1.0, gz)
+		velocity = Vector3.ZERO
+		Events.notify.emit("Вы выбрались на поверхность", "warn")
 
 	# --- высота головы, покачивание, шаги
 	var h_target := CROUCH_H if crouching else STAND_H
