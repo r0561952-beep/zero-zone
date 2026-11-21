@@ -16,8 +16,8 @@
   "sugar":         {"name": "Сахар-рафинад", "cat": "food", "weight": 0.25, "stack": 10, "value": 4, "desc": "Пачка рафинада. Быстрая энергия.", "use": {"hunger": 8, "sleep": 5, "thirst": -3}},
   "empty_tin":     {"name": "Пустая банка", "cat": "material", "weight": 0.05, "stack": 10, "value": 0, "model": "can_rusted", "desc": "Можно сдать в металлолом.", "tags": ["scrap_small"]},
 
-  "water_dirty":   {"name": "Сырая вода", "cat": "water", "weight": 1.0, "stack": 4, "value": 1, "model": "jug_01", "desc": "Бутылка воды из колодца или ручья. Без кипячения — риск отравления.", "use": {"thirst": 30, "sick": 20}, "leaves": "empty_bottle"},
-  "water_clean":   {"name": "Кипячёная вода", "cat": "water", "weight": 1.0, "stack": 4, "value": 5, "model": "jug_01", "desc": "Чистая. Можно пить без опаски.", "use": {"thirst": 35}, "leaves": "empty_bottle"},
+  "water_dirty":   {"name": "Сырая вода", "cat": "water", "weight": 1.0, "stack": 4, "value": 1, "desc": "Бутылка воды из колодца или ручья. Без кипячения — риск отравления.", "use": {"thirst": 30, "sick": 20}, "leaves": "empty_bottle"},
+  "water_clean":   {"name": "Кипячёная вода", "cat": "water", "weight": 1.0, "stack": 4, "value": 5, "desc": "Чистая. Можно пить без опаски.", "use": {"thirst": 35}, "leaves": "empty_bottle"},
   "water_bottle":  {"name": "Минеральная вода", "cat": "water", "weight": 0.5, "stack": 4, "value": 8, "desc": "Заводская бутылка. Газ давно вышел.", "use": {"thirst": 28}, "leaves": "empty_bottle"},
   "tea":           {"name": "Чай с мёдом", "cat": "water", "weight": 0.5, "stack": 2, "value": 12, "desc": "Горячий. Согревает изнутри.", "use": {"thirst": 30, "warmth": 6, "sleep": 6, "health": 3}, "leaves": "empty_bottle"},
   "empty_bottle":  {"name": "Пустая бутылка", "cat": "water", "weight": 0.1, "stack": 6, "value": 1, "desc": "Полторашка. Наберите воды у колодца или ручья.", "tags": ["water_container"]},

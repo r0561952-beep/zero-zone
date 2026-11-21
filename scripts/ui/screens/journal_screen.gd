@@ -178,7 +178,7 @@ class MapView:
 			for y in fh:
 				for x in fw:
 					if GameState.map_fog[y * fw + x] == 0:
-						draw_rect(Rect2(r.position + Vector2(x * cw, y * ch), Vector2(cw + 1, ch + 1)), Color(0.09, 0.085, 0.08, 0.93))
+						draw_rect(Rect2(r.position + Vector2(x * cw, y * ch), Vector2(cw + 1, ch + 1)), Color(0.085, 0.08, 0.075, 1.0))
 		var font := UIKit.theme().default_font
 		for l in ItemDB.region.get("locations", []):
 			if not (str(l.id) in GameState.discovered):
@@ -186,6 +186,7 @@ class MapView:
 			var uv := _world_to_uv(Vector3(l.center[0], 0, l.center[1]))
 			var pos := r.position + uv * r.size
 			draw_circle(pos, 4.0, Color(0.25, 0.2, 0.15))
+			draw_string_outline(font, pos + Vector2(8, 5), str(l.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, 4, Color(0.85, 0.8, 0.68))
 			draw_string(font, pos + Vector2(8, 5), str(l.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.15, 0.12, 0.1))
 		if GameState.flags.has("shelter_pos"):
 			var sp := SaveSystem.to_v3(GameState.flags.shelter_pos)

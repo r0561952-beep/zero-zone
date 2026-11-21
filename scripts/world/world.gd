@@ -125,6 +125,11 @@ func build(new_game: bool) -> void:
 	Events.player_slept.connect(func(_h): SaveSystem.save_game("auto"))
 
 
+func _exit_tree() -> void:
+	if GameState.world_node == self:
+		GameState.world_node = null
+
+
 func _process(delta: float) -> void:
 	_wet_t -= delta
 	if _wet_t <= 0.0:

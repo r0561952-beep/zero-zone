@@ -59,11 +59,8 @@ static func _bush(far: bool) -> ArrayMesh:
 			_branch(kit, twig, Vector3.ZERO, d, rng.randf_range(0.9, 1.5), 0.03, 0.01)
 		else:
 			_limbs(kit, twig, Vector3(0, -0.05, 0), d, rng.randf_range(0.8, 1.5), 0.025, 1, rng)
-	if not far:
-		for i in 4:
-			_blob(kit, leaves, Vector3(rng.randf_range(-0.4, 0.4), rng.randf_range(0.5, 1.1), rng.randf_range(-0.4, 0.4)), Vector3(0.35, 0.25, 0.35), rng, 3, 5)
-	else:
-		_blob(kit, leaves, Vector3(0, 0.7, 0), Vector3(0.6, 0.5, 0.6), rng, 2, 4)
+	if far:
+		_blob(kit, leaves, Vector3(0, 0.6, 0), Vector3(0.5, 0.35, 0.5), rng, 2, 4)
 	return kit.commit()
 
 
@@ -81,8 +78,6 @@ static func _apple(far: bool) -> ArrayMesh:
 			_branch(kit, bark, Vector3(0.15, 1.5, 0.08), d, 1.8, 0.07, 0.02)
 		else:
 			_limbs(kit, bark, Vector3(0.15, 1.5, 0.08), d, rng.randf_range(1.4, 2.2), 0.07, 2, rng)
-	if not far:
-		_blob(kit, Mats.get_mat("birch_foliage2"), Vector3(0.4, 3.0, 0.2), Vector3(0.5, 0.3, 0.5), rng, 3, 5)
 	return kit.commit()
 
 
@@ -93,12 +88,10 @@ static func _cone(kit: MeshKit, mat: Material, y: float, h: float, r: float, sid
 		var a := TAU * i / sides + rng.randf() * 0.2
 		var rr := r * (1.0 - jag * (i % 2))
 		rim.append(Vector3(cos(a) * rr, y - (droop if i % 2 == 0 else 0.0), sin(a) * rr))
-	var center := Vector3(0, y + h * 0.18, 0)
 	for i in sides:
 		var p0: Vector3 = rim[i]
 		var p1: Vector3 = rim[(i + 1) % sides]
 		kit.add_tri(mat, apex, p0, p1, Vector3.RIGHT, Vector3.UP)
-		kit.add_tri(mat, center, p1, p0, Vector3.RIGHT, Vector3.FORWARD)
 
 
 static func _trunk(kit: MeshKit, mat: Material, h: float, r0: float, r1: float, sides: int) -> void:
@@ -188,9 +181,6 @@ static func _birch(far: bool) -> ArrayMesh:
 		var y := 3.8 + i * 0.68
 		var d := Vector3(cos(a), rng.randf_range(0.9, 1.6), sin(a))
 		_limbs(kit, twig if i > 2 else bark, Vector3(0, y, 0), d, rng.randf_range(1.6, 2.8) * (1.0 - i * 0.05), 0.06, 2, rng)
-	# последние жёлтые листья
-	for i in 3:
-		_blob(kit, fol, Vector3(rng.randf_range(-1.2, 1.2), rng.randf_range(6.0, 9.0), rng.randf_range(-1.2, 1.2)), Vector3(0.45, 0.3, 0.45), rng, 2, 5)
 	return kit.commit()
 
 

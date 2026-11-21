@@ -88,6 +88,8 @@ static func get_mat(name: String) -> Material:
 		sm.albedo_color = p[0]
 		sm.roughness = p[1]
 		sm.metallic = p[2]
+		if name.ends_with("foliage") or name.ends_with("foliage2"):
+			sm.cull_mode = BaseMaterial3D.CULL_DISABLED   # хвоя видна и снизу (без чёрных «днищ»)
 		sm.set_meta("tile", 1.0)
 		m = sm
 	elif name == "glass":

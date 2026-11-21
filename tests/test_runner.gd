@@ -24,6 +24,7 @@ func _ready() -> void:
 	test_inventory()
 	test_crafting()
 	await test_world_and_save()
+	await test_ui_and_gameplay()
 	print("=== RESULT: %d passed, %d failed ===" % [passed, failed])
 	for f in _fails:
 		print("FAILED: ", f)
@@ -204,6 +205,8 @@ func test_world_and_save() -> void:
 		await get_tree().physics_frame
 	ok(not p2.dead, "игрок жив после симуляции кадров")
 	GameState.running = false
+	world2.queue_free()
+	await get_tree().process_frame
 
 
 func _find(n: Node, cls) -> Array:
@@ -215,3 +218,175 @@ func _find(n: Node, cls) -> Array:
 			out.append(x)
 		stack.append_array(x.get_children())
 	return out
+
+
+func test_ui_and_gameplay() -> void:
+	print("[ui & gameplay]")
+	GameState.new_game()
+	var world := World.new()
+	add_child(world)
+	world.build(true)
+	var ui := GameUI.new()
+	add_child(ui)
+	GameState.running = true
+	InputRouter.set_gameplay_active(true)
+	await get_tree().process_frame
+	var p = GameState.player
+	p.inventory.add("radio", 1)
+	var niva: Car = null
+	for car in _find(world, Car):
+		if car.state == "repairable":
+			niva = car
+	var tikhon: NPC = null
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n.npc_id == "tikhon":
+			tikhon = n
+	var cont: LootContainer = _find(world, LootContainer)[5]
+	var screens := [["inventory", null], ["crafting", "fire"], ["container", cont], ["journal", null], ["map", null],
+		["dialogue", tikhon], ["note", {"note": "postcard", "item": "doc_postcard"}], ["radio", null],
+		["sleep", {"quality": 1.0, "title": "Кровать"}], ["hide", {"title": "Подпол"}],
+		["chalk", {"pos": p.global_position, "normal": Vector3.FORWARD}], ["car", niva], ["pause", null]]
+	for sc in screens:
+		Events.open_screen.emit(sc[0], sc[1])
+		await get_tree().process_frame
+		await get_tree().process_frame
+		ok(ui.screen != null and ui.screen_name == sc[0], "экран «%s» открывается" % sc[0])
+		Events.close_screens.emit()
+		await get_tree().process_frame
+	ok(not get_tree().paused, "после закрытия экранов игра не на паузе")
+
+	# --- диалог: прогон всех узлов Тихона
+	Events.open_screen.emit("dialogue", tikhon)
+	await get_tree().process_frame
+	var dlg = ui.screen
+	for node_id in ItemDB.dialogues.tikhon.nodes:
+		if node_id in ["end", "trade"]:
+			continue
+		dlg.show_node(node_id)
+		for o in ItemDB.dialogues.tikhon.nodes[node_id].get("options", []):
+			if not o.get("do", []).is_empty() and not str(o.do).contains("take:"):
+				Conditions.run_all(o.do)
+	ok(GameState.get_flag("met_tikhon"), "диалог ставит флаги (знакомство с Тихоном)")
+	ok("earplugs" in GameState.known_recipes, "диалог открывает рецепты (беруши)")
+	dlg.show_node("trade")
+	p.inventory.add("canned_meat", 3)
+	dlg._trade_give = {"canned_meat": 3}
+	dlg._trade_take = {"potato": 2}
+	var pot0: int = p.count_item("potato")
+	dlg._do_trade()
+	ok(p.count_item("potato") == pot0 + 2, "обмен с Тихоном работает")
+	Events.close_screens.emit()
+	await get_tree().process_frame
+
+	# --- ходьба (сенсорный джойстик)
+	var start: Vector3 = p.global_position
+	InputRouter.touch_move = Vector2(0, -1)
+	for i in 150:
+		await get_tree().physics_frame
+	InputRouter.touch_move = Vector2.ZERO
+	var moved: float = Vector2(p.global_position.x - start.x, p.global_position.z - start.z).length()
+	ok(moved > 2.5, "игрок идёт вперёд от джойстика (%.1f м)" % moved)
+	ok(p.global_position.y > RegionData.height_at(p.global_position.x, p.global_position.z) - 1.0, "игрок не провалился под землю")
+
+	# --- двери
+	var door: Door = _find(world, Door)[3]
+	var was: bool = door.open
+	if door.locked:
+		door.locked = false
+	door.use(p)
+	ok(door.open != was, "дверь открывается/закрывается")
+
+	# --- записка открывает рецепт и журнал
+	p.read_note("diy")
+	ok("workbench" in GameState.known_recipes, "записка «Сделай сам» открыла рецепт верстака")
+	ok(GameState.notes_read.has("diy"), "записка в журнале")
+	Events.close_screens.emit()
+
+	# --- Гул: снаружи дезориентация растёт
+	GameState.next_hum_at = GameState.time_min + 1.0
+	for i in 5:
+		await get_tree().process_frame
+	GameState.advance(3.0)
+	for i in 5:
+		await get_tree().process_frame
+	ok(GameState.is_hum_active(), "Гул начинается по расписанию")
+	var hx0: float = p.survival.hum_exposure
+	p.survival.tick(0.1, 10.0, {"hum_active": true, "hum_protect": p.hum_protection(), "air_temp": 5.0})
+	ok(p.survival.hum_exposure > hx0, "Гул снаружи вызывает дезориентацию")
+	p.survival.hum_exposure = 0.0
+	GameState.hum_active_until = GameState.time_min - 1.0
+	for i in 3:
+		await get_tree().process_frame
+
+	# --- сон
+	var t0 := GameState.time_min
+	var sl := SmallScreens.SleepScreen.new()
+	sl.quality = 1.0
+	add_child(sl)
+	GameState.next_hum_at = GameState.time_min + 5000.0
+	sl._sleep(2)
+	ok(GameState.time_min - t0 >= 110.0, "сон проматывает время (%.0f мин)" % (GameState.time_min - t0))
+	sl.queue_free()
+	await get_tree().process_frame
+
+	# --- размещение костра и огонь для готовки
+	p.inventory.add("campfire_kit", 1)
+	world.placement.begin("campfire_kit")
+	await get_tree().process_frame
+	world.placement._valid = true
+	world.placement._pos = p.global_position + Vector3(2, 0, 0)
+	var placed0 := GameState.placed.size()
+	world.placement.confirm()
+	ok(GameState.placed.size() == placed0 + 1, "костёр поставлен и сохранён в убежище")
+	var fire: MiscInteract.HeatSource = null
+	for h in get_tree().get_nodes_in_group("heat_source"):
+		if str(h.source_id).begins_with("placed/"):
+			fire = h
+	ok(fire != null, "костёр создан в мире")
+	if fire:
+		p.inventory.add("wood_log", 1)
+		p.inventory.add("water_dirty", 1)
+		fire.interact(p)
+		ok(fire.lit, "костёр разжигается спичками и поленом")
+		Events.close_screens.emit()
+		ok(Crafting.craft("water_clean", p, "fire"), "кипячение воды на огне")
+	await get_tree().process_frame
+
+	# --- машина: ремонт и езда
+	if niva:
+		niva.parts = {"battery": true, "plugs": true, "wheel": true, "fuel": 10.0}
+		p.global_position = niva.global_position + Vector3(-2.5, 0.5, 0)
+		world.terrain.build_around(niva.global_position)
+		for i in 5:
+			await get_tree().physics_frame
+		niva.enter(p)
+		InputRouter.set_gameplay_active(true)
+		for i in 3:
+			await get_tree().process_frame
+		InputRouter.touch_move = Vector2(0, -1)
+		for i in 120:
+			await get_tree().physics_frame
+		InputRouter.touch_move = Vector2.ZERO
+		ok(niva.speed_kmh() > 8.0, "«Нива» едет (%.1f км/ч)" % niva.speed_kmh())
+		niva.exit_car()
+		ok(p.in_vehicle == null and p.visible, "выход из машины")
+		ok(GameState.get_flag("niva_driven"), "задание «Нива» отмечает поездку")
+
+	# --- радио: Марта вечером на 101.3
+	GameState.time_min = floor(GameState.time_min / 1440.0) * 1440.0 + 21.0 * 60.0
+	var radio := SmallScreens.RadioScreen.new()
+	add_child(radio)
+	radio.freq = 101.3
+	radio._on_tune()
+	ok(GameState.get_flag("radio_marta_heard"), "радио: Марта в эфире вечером на 101.3")
+	radio.queue_free()
+
+	# --- смерть и экран смерти
+	p.survival.health = 0.0
+	await get_tree().process_frame
+	await get_tree().process_frame
+	ok(p.dead and ui.screen_name == "death", "смерть показывает экран «Глеб погиб»")
+	GameState.running = false
+	ui.queue_free()
+	world.queue_free()
+	await get_tree().process_frame

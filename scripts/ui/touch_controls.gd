@@ -222,7 +222,9 @@ func _draw() -> void:
 			var i := int(str(b.id).substr(5))
 			var id: String = p.quickbar[i]
 			if id != "":
-				var name := UIKit._short(ItemDB.item_name(id))
+				var name := ItemDB.item_name(id).split(" ")[0]
+				if name.length() > 9:
+					name = name.substr(0, 8) + "…"
 				var n: int = p.count_item(id)
 				var eq: bool = p.equipment.has("hand") and p.equipment.hand.id == id
 				_text(b.pos + Vector2(0, -4), name, 13, Color(1, 1, 1, 0.9 if (n > 0 or eq) else 0.35), b.r * 2.0)

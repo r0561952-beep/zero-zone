@@ -54,15 +54,15 @@ func _clump_mesh() -> ArrayMesh:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 77
-	var base := Color(0.2, 0.18, 0.1)
-	for i in 9:
+	var base := Color(0.32, 0.29, 0.18)
+	for i in 16:
 		var a := rng.randf() * TAU
-		var h := rng.randf_range(0.35, 0.95)
-		var w := rng.randf_range(0.035, 0.06)
+		var h := rng.randf_range(0.3, 1.0)
+		var w := rng.randf_range(0.012, 0.022)
 		var off := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.0, 0.22)
 		var dir := Vector3(cos(a + 1.57), 0, sin(a + 1.57))
-		var lean := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.05, 0.3)
-		var tip_col := Color(0.62, 0.55, 0.34).lerp(Color(0.48, 0.45, 0.28), rng.randf())
+		var lean := Vector3(cos(a), 0, sin(a)) * rng.randf_range(0.1, 0.45)
+		var tip_col := Color(0.7, 0.62, 0.42).lerp(Color(0.55, 0.5, 0.33), rng.randf())
 		var p0 := off - dir * w
 		var p1 := off + dir * w
 		var p2 := off + lean * 0.6 + Vector3.UP * h * 0.55 + dir * w * 0.6

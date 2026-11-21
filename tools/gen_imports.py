@@ -51,7 +51,11 @@ def main():
             rel = os.path.relpath(p, ROOT).replace(os.sep, "/")
             low = rel.lower()
             normal = 1 if ("_normal." in low or "_nor_gl" in low) else 2
-            limit = 0
+            # Земля — 1K (её видно вблизи больше всего), остальное — 512 px: экономия ~40 МБ в APK
+            keep = any(k in rel for k in ("withered_grass", "forest_leaves_02", "gravel_road", "muddy_tracks"))
+            limit = 0 if (keep and "_arm" not in low) else (128 if keep else 512)
+            if "/models/" in rel:
+                limit = 0
             with open(imp, "w", encoding="utf-8") as f:
                 f.write(TEMPLATE.format(rel=rel, normal=normal, limit=limit))
             n += 1

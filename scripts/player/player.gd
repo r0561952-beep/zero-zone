@@ -114,6 +114,11 @@ func _ready() -> void:
 	_apply_settings()
 
 
+func _exit_tree() -> void:
+	if GameState.player == self:
+		GameState.player = null
+
+
 func _apply_settings() -> void:
 	camera.fov = Settings.fov
 	camera.far = Settings.view_distance + 40.0

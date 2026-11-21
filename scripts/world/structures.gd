@@ -344,12 +344,12 @@ static func _power_line(def: Dictionary, parent: Node3D) -> void:
 					var s0: Vector3 = seg[0]
 					var s1: Vector3 = seg[1]
 					if s0.distance_to(s1) > 0.1:
-						wires.add_box(Mats.get_mat("wire"), Transform3D(Basis.looking_at(s1 - s0, Vector3.UP), (s0 + s1) * 0.5), Vector3(0.025, 0.025, s0.distance_to(s1)))
+						wires.add_box(Mats.get_mat("wire"), Transform3D(Basis.looking_at(s1 - s0, Vector3.UP), (s0 + s1) * 0.5), Vector3(0.04, 0.04, s0.distance_to(s1)))
 		prev = top
 	root.add_child(kit.build_instance("Poles", false))
 	if not wires.is_empty():
 		var wm := wires.build_instance("Wires", false)
-		wm.visibility_range_end = 70.0
+		wm.visibility_range_end = 55.0
 		root.add_child(wm)
 
 

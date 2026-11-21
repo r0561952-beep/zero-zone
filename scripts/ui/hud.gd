@@ -169,6 +169,9 @@ func _ready() -> void:
 func _layout() -> void:
 	quickbar.visible = Settings.is_pc()
 	var touch := not Settings.is_pc()
+	# на телефоне сверху справа — кнопки меню; задание опускаем под них
+	objective_lbl.offset_top = 96 if touch else 14
+	objective_lbl.offset_right = -24 if touch else -110
 	_stats_panel.scale = Vector2.ONE * (0.92 if touch else 1.0)
 
 

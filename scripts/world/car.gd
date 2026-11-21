@@ -37,6 +37,8 @@ func _ready() -> void:
 	collision_layer = 16
 	collision_mask = 1 | 16
 	mass = 950.0
+	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
+	center_of_mass = Vector3(0, 0.35, 0.25)
 	freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 	freeze = true
 	can_sleep = true
@@ -333,6 +335,8 @@ func exit_car() -> void:
 func _physics_process(delta: float) -> void:
 	if driver == null:
 		return
+	# игрок «едет» вместе с машиной: стриминг мира и коллизия земли следуют за ним
+	(driver as Node3D).global_position = global_position + Vector3.UP * 1.2
 	var mv := InputRouter.move_vector() if InputRouter.gameplay_active else Vector2.ZERO
 	var throttle := -mv.y
 	var spd := linear_velocity.dot(global_transform.basis.z)
@@ -340,17 +344,17 @@ func _physics_process(delta: float) -> void:
 	if float(parts.fuel) <= 0.0:
 		throttle = 0.0
 	if throttle > 0.05:
-		engine_force = throttle * 3600.0 if spd > -1.0 else 0.0
+		engine_force = throttle * 950.0 if spd > -1.0 and spd < 24.0 else 0.0
 		brake = 0.0 if spd > -1.0 else 25.0
 	elif throttle < -0.05:
-		engine_force = throttle * 2200.0 if spd < 1.0 else 0.0
+		engine_force = throttle * 600.0 if spd < 1.0 and spd > -7.0 else 0.0
 		brake = 0.0 if spd < 1.0 else 25.0
 	else:
 		engine_force = 0.0
 		brake = 3.0
 	if Input.is_action_pressed("jump"):
 		brake = 45.0
-	parts.fuel = maxf(0.0, float(parts.fuel) - absf(engine_force) * delta * 0.000004)
+	parts.fuel = maxf(0.0, float(parts.fuel) - (absf(engine_force) * 0.000016 + 0.0004) * delta)
 	engine_snd.pitch_scale = 0.7 + clampf(absf(spd) / 18.0, 0.0, 1.4)
 	engine_snd.volume_db = -6.0 + clampf(absf(throttle) * 6.0, 0.0, 6.0)
 	if Engine.get_physics_frames() % 30 == 0:

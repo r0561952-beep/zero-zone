@@ -114,7 +114,7 @@ func tick(real_delta: float, minutes: float, ctx: Dictionary) -> void:
 		_hurt(4.0 * hrs, "отравление")
 	if hum_exposure > 85.0:
 		_hurt(12.0 * hrs, "Гул")
-	if hunger > 35.0 and thirst > 35.0 and body_temp > 35.8 and sleep > 15.0 and not bleeding and sick < 40.0:
+	if health > 0.0 and hunger > 35.0 and thirst > 35.0 and body_temp > 35.8 and sleep > 15.0 and not bleeding and sick < 40.0:
 		health = minf(100.0, health + 1.6 * hrs * (1.0 + GameState.skill_level("medicine") * 0.15))
 
 

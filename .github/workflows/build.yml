@@ -107,6 +107,7 @@ jobs:
         run: |
           timeout 600 ~/godot/godot --headless --path . --quit-after 30000 res://tests/test_runner.tscn 2>&1 | tee test.log
           grep -q "RESULT: .* 0 failed" test.log
+          if grep -q "SCRIPT ERROR" test.log; then echo "::error::Ошибки скриптов во время тестов"; grep -A3 "SCRIPT ERROR" test.log; exit 1; fi
 
       - name: Export Android APK
         run: |
