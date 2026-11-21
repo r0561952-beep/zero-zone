@@ -1,0 +1,58 @@
+{
+  "_comment": "Объекты мира. tpl — шаблон из scripts/world/building_templates.gd. rot — градусы, 0 = фасад смотрит на юг (+Z).",
+  "buildings": [
+    {"id": "tikhon", "tpl": "house_b", "pos": [-150, -26], "rot": 0, "name": "Дом Тихона Петровича", "style": "blue", "owner": "tikhon"},
+    {"id": "h_n1", "tpl": "house_a", "pos": [-105, -23], "rot": 0, "style": "planks"},
+    {"id": "h_n2", "tpl": "house_a", "pos": [-62, -23], "rot": 0, "style": "green", "chalk": "пусто"},
+    {"id": "h_n3", "tpl": "house_b", "pos": [-16, -26], "rot": 0, "style": "planks", "chalk": "тайник"},
+    {"id": "h_n4", "tpl": "house_a", "pos": [86, -22], "rot": 0, "style": "blue"},
+    {"id": "h_n5", "tpl": "house_b", "pos": [130, -25], "rot": 0, "style": "planks", "chalk": "опасно"},
+    {"id": "h_n6", "tpl": "house_a", "pos": [172, -22], "rot": 0, "style": "green"},
+    {"id": "h_s1", "tpl": "house_a", "pos": [-142, 23], "rot": 180, "style": "planks"},
+    {"id": "h_s2", "tpl": "house_b", "pos": [-100, 26], "rot": 180, "style": "blue"},
+    {"id": "fap", "tpl": "fap", "pos": [-52, 26], "rot": 180, "name": "ФАП (амбулатория)"},
+    {"id": "shop", "tpl": "shop", "pos": [12, 22], "rot": 180, "name": "Магазин «Продукты»"},
+    {"id": "vera", "tpl": "house_b", "pos": [84, 26], "rot": 180, "name": "Дом Веры", "style": "blue"},
+    {"id": "h_s4", "tpl": "house_a", "pos": [126, 23], "rot": 180, "style": "planks", "chalk": "вода"},
+    {"id": "h_s5", "tpl": "house_a", "pos": [168, 23], "rot": 180, "style": "green"},
+    {"id": "h_e1", "tpl": "house_a", "pos": [14, 72], "rot": 90, "style": "planks"},
+    {"id": "h_e2", "tpl": "house_b", "pos": [66, 94], "rot": -90, "style": "green", "chalk": "тайник"},
+    {"id": "school", "tpl": "school", "pos": [80, -80], "rot": -90, "name": "Сосновская школа"},
+    {"id": "garages", "tpl": "garage_row", "pos": [8, -74], "rot": 90, "name": "Гаражи"},
+    {"id": "cabin", "tpl": "cabin", "pos": [-380, -300], "rot": 20, "name": "Охотничий домик"},
+    {"id": "gas_shop", "tpl": "gas_shop", "pos": [618, 30], "rot": 0, "name": "Заправка «Луч»"},
+    {"id": "gas_store", "tpl": "shed", "pos": [646, 28], "rot": 0, "name": "Склад заправки"}
+  ],
+  "structures": [
+    {"type": "water_tower", "pos": [104, -132]},
+    {"type": "well", "id": "well_main", "pos": [-80, 9]},
+    {"type": "well", "id": "well_cross", "pos": [48, -30]},
+    {"type": "bus_stop", "pos": [150, 13], "rot": 180},
+    {"type": "fuel_canopy", "pos": [618, 54], "rot": 0},
+    {"type": "beehives", "pos": [-150, -45], "rot": 0},
+    {"type": "camp", "id": "camp", "pos": [-228, 296]},
+    {"type": "bridge", "pos": [-262, 10], "rot": 12},
+    {"type": "perimeter_fence", "x": -652, "gap": [32, 48]},
+    {"type": "watchtower", "pos": [-640, 120], "rot": 90},
+    {"type": "roadblock", "pos": [880, 60], "rot": 90},
+    {"type": "power_line", "points": [[-200, -9], [190, -9]], "step": 32},
+    {"type": "power_line", "points": [[190, -9], [600, 62]], "step": 40}
+  ],
+  "cars": [
+    {"id": "car_lada_1", "model": "sedan", "pos": [-30, 7], "rot": 82, "state": "wreck"},
+    {"id": "car_hatch_1", "model": "hatchback-sports", "pos": [104, -7], "rot": -96, "state": "donor"},
+    {"id": "car_niva", "model": "suv", "pos": [25, -63], "rot": 180, "state": "repairable", "name": "Нива почтальона"},
+    {"id": "car_van_1", "model": "van", "pos": [160, 8], "rot": 175, "state": "donor"},
+    {"id": "car_r17_1", "model": "sedan", "pos": [305, 25], "rot": 103, "state": "donor"},
+    {"id": "car_r17_2", "model": "truck", "pos": [452, 66], "rot": 70, "state": "wreck"},
+    {"id": "car_st_1", "model": "sedan", "pos": [600, 56], "rot": 4, "state": "burned"},
+    {"id": "car_st_2", "model": "hatchback-sports", "pos": [640, 66], "rot": 95, "state": "donor"},
+    {"id": "car_st_3", "model": "delivery", "pos": [585, 40], "rot": 30, "state": "donor"}
+  ],
+  "npcs": [
+    {"id": "tikhon", "kind": "tikhon"},
+    {"id": "jackal_1", "kind": "marauder", "home": [632, 38], "patrol": [[600, 45], [650, 50], [640, 80], [590, 70]]},
+    {"id": "jackal_2", "kind": "marauder", "home": [648, 30], "patrol": [[560, 70], [520, 68], [560, 50]]}
+  ],
+  "start": {"pos": [-636, 40], "rot": 90}
+}
